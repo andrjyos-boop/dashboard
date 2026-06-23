@@ -231,7 +231,10 @@
   </div>
 
   <script>
-    const REFRESH_INTERVAL = 30000; // 30 секунд
+    // Твоє індивідуальне посилання на Google API вже вбудовано сюди:
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzhjbkXnyKNNALzpZoXtgXKKtuOpbBxCUXyxFMcgynFJUVJMQqhqJfr4yVWD0CkTkc8rg/exec";
+
+    const REFRESH_INTERVAL = 30000; 
     let timeLeft = REFRESH_INTERVAL / 1000;
     let allData = [];
     let isSpoilerOpen = false;
@@ -249,13 +252,11 @@
       countdownTimer = setInterval(function() {
         timeLeft--;
         const countdownEl = document.getElementById('countdown');
-        if (countdownEl) {
-          countdownEl.innerText = timeLeft;
-        }
+        if (countdownEl) countdownEl.innerText = timeLeft;
 
         if (timeLeft <= 0) {
           fetchData();
-          timeLeft = REFRESH_INTERVAL / 1000; // Скидаємо лічильник назад на 30
+          timeLeft = REFRESH_INTERVAL / 1000; 
         }
       }, 1000);
     }
@@ -265,10 +266,11 @@
       if (!isInitialLoad) {
         clockEl.innerText = "Оновлення даних з Таблиці...";
       }
-      google.script.run
-        .withSuccessHandler(renderData)
-        .withFailureHandler(showError)
-        .getDataFromSheet();
+
+      fetch(GOOGLE_API_URL)
+        .then(response => response.json())
+        .then(data => renderData(data))
+        .catch(err => showError(err));
     }
 
     function renderData(data) {
@@ -277,15 +279,12 @@
       allData = data;
       buildDashboard(data);
       
-      if (isInitialLoad) {
-        isInitialLoad = false;
-      }
+      if (isInitialLoad) isInitialLoad = false;
       
       const now = new Date();
       const timeStr = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       document.getElementById('refresh-clock').innerText = `Синхронізовано: ${timeStr}`;
       
-      // Перезапускаємо таймер на повні 30 секунд після успішного завантаження даних
       timeLeft = REFRESH_INTERVAL / 1000;
       document.getElementById('countdown').innerText = timeLeft;
     }
@@ -402,6 +401,7 @@
     function showError(err) {
       document.getElementById("loader").style.display = "none";
       document.getElementById('refresh-clock').innerText = "Помилка синхронізації.";
+      console.error(err);
     }
   </script>
 </body>
